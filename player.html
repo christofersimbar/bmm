@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Player Check-in</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="container mt-5">
+    <h2>Player Check-in</h2>
+    <p id="playerName">Loading player info...</p>
+    <button id="checkinBtn" class="btn btn-success" style="display: none">
+      Check In
+    </button>
+
+    <script>
+      const lambdaUrl =
+        "https://drif7eckv372x2qt7pzhl47wde0yjplc.lambda-url.ap-southeast-1.on.aws/"
+
+      function getQueryParam(param) {
+        const urlParams = new URLSearchParams(window.location.search)
+        return urlParams.get(param)
+      }
+
+      const code = getQueryParam("code")
+
+async function fetchPlayerInfo() {
+  if (!code) {
+    document.getElementById("playerName").textContent = "Missing code in URL!";
+    return;
+  }
+
+  try {
+    const response = await fetch(lambdaUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "get_player",
+        encrypted_string: code,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (data.player_name) {
+      document.getElementById("playerName").textContent = `Player: ${data.player_name}`;
+      document.getElementById("checkinBtn").style.display = "block"; // Show check-in button
+    } else {
+      document.getElementById("playerName").textContent = "Player not found!";
+    }
+  } catch (error) {
+    document.getElementById("playerName").textContent = "Error fetching player info.";
+    console.error("Error:", error);
+  }
+}
+
+      document
+        .getElementById("checkinBtn")
+        .addEventListener("click", async function () {
+          if (!code) return
+          const response = await fetch(lambdaUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              action: "update_checkin",
+              encrypted_string: code,
+              checkin_status: true,
+            }),
+          })
+          const data = await response.json()
+          alert("Check-in Successful!")
+        })
+
+      // Fetch player info on page load
+      fetchPlayerInfo()
+    </script>
+  </body>
+</html>
