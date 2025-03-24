@@ -217,7 +217,17 @@ document.getElementById("copyGameUrl").addEventListener("click", () => {
 
             if (response.ok && data.game_code) {
               gameCode = data.game_code
-              document.getElementById("gameCodeDisplay").textContent = gameCode
+const gameUrl = `https://badminton-match-maker.xt0.me?code=${gameCode}`;
+document.getElementById("gameCodeDisplay").innerHTML = `
+  <a href="${gameUrl}" target="_blank">${gameUrl}</a>
+  <button id="copyGameUrl" class="btn btn-secondary btn-sm ms-2">Copy URL</button>
+`;
+
+document.getElementById("copyGameUrl").addEventListener("click", () => {
+  navigator.clipboard.writeText(gameUrl).then(() => {
+    alert("Game URL copied to clipboard!");
+  });
+});
               document
                 .getElementById("registerPlayersForm")
                 .classList.remove("d-none")
