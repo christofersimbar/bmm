@@ -105,57 +105,68 @@
   </div>
 
   <script>
-    let players1 = [];
+  let players1 = [];
 
-    async function showPlayerList() {
-      try {
-        const response = await fetch(lambdaUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "get_players", game_code: gameCode }),
-        });
+  async function fetchPlayers() {
+    try {
+      const response = await fetch(lambdaUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "get_players", game_code: gameCode }),
+      });
 
-        const data = await response.json();
-        console.log("Raw API Response:", data);
+      const data = await response.json();
+      console.log("Raw API Response:", data);
 
-        const playerList = document.getElementById("playerList");
-        playerList.innerHTML = "";
+      const playerList = document.getElementById("playerList");
+      playerList.innerHTML = "";
 
-        if (response.ok && data.body && Array.isArray(data.body) && data.body.length > 0) {
-          document.getElementById("playersHeader").classList.remove("d-none");
+      if (response.ok && data.body && Array.isArray(data.body) && data.body.length > 0) {
+        document.getElementById("playersHeader").classList.remove("d-none");
 
-          players1 = data.body.map(player => ({
-            name: player.name,
-            level: player.level
-          }));
+        players1 = data.body.map(player => ({
+          name: player.name,
+          level: player.level
+        }));
 
-          console.log("Formatted Players:", players1);
-
-          const list = document.getElementById("playerSelectionList");
-          list.innerHTML = "";
-          players1.forEach((player, index) => {
-            const li = document.createElement("li");
-            li.className = "list-group-item list-group-item-action";
-            li.textContent = player.name;
-            li.onclick = function () {
-              document.getElementById("name").value = player.name;
-              document.getElementById("level").value = player.level;
-              $("#playerSelectionModal").modal("hide");
-            };
-            list.appendChild(li);
-          });
-
-          $("#playerSelectionModal").modal("show");
-
-        } else {
-          document.getElementById("playersHeader").classList.add("d-none");
-        }
-
-      } catch (error) {
-        console.error("Error fetching players:", error);
+        console.log("Formatted Players:", players1);
+      } else {
+        document.getElementById("playersHeader").classList.add("d-none");
       }
+    } catch (error) {
+      console.error("Error fetching players:", error);
     }
-  </script>
+  }
+
+  async function showPlayerList() {
+    if (players1.length === 0) {
+      console.warn("Player list is empty, refetching...");
+      await fetchPlayers();
+    }
+
+    const list = document.getElementById("playerSelectionList");
+    list.innerHTML = "";
+    players1.forEach((player, index) => {
+      const li = document.createElement("li");
+      li.className = "list-group-item list-group-item-action";
+      li.textContent = player.name;
+      li.onclick = function () {
+        document.getElementById("name").value = player.name;
+        document.getElementById("level").value = player.level;
+        $("#playerSelectionModal").modal("hide");
+      };
+      list.appendChild(li);
+    });
+
+    $("#playerSelectionModal").modal("show");
+  }
+
+  // Fetch players when the page loads
+  window.onload = async () => {
+    await fetchPlayers();
+  };
+</script>
+
 
   <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
